@@ -27,7 +27,12 @@ module.exports = function (fileName, converter) {
     if (file.isStream()) {
       return this.emit('error', new PluginError('gulp-jsoncombine', 'Streaming not supported'));
     }
-    data[file.relative.substr(0,file.relative.length-5)] = JSON.parse(file.contents.toString());
+    try {
+      data[file.relative.substr(0,file.relative.length-5)] = JSON.parse(file.contents.toString());
+    } catch (err) {
+      return this.emit('error',
+          new PluginError('gulp-jsoncombine', 'Error parsing JSON: ' + err));
+    }
   }
 
   function endStream() {
