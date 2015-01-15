@@ -36,16 +36,18 @@ module.exports = function (fileName, converter) {
   }
 
   function endStream() {
-    var joinedPath = path.join(firstFile.base, fileName);
+    if (firstFile) {
+      var joinedPath = path.join(firstFile.base, fileName);
 
-    var joinedFile = new File({
-      cwd: firstFile.cwd,
-      base: firstFile.base,
-      path: joinedPath,
-      contents: converter(data)
-    });
+      var joinedFile = new File({
+        cwd: firstFile.cwd,
+        base: firstFile.base,
+        path: joinedPath,
+        contents: converter(data)
+      });
 
-    this.emit('data', joinedFile);
+      this.emit('data', joinedFile);
+    }
     this.emit('end');
   }
 
