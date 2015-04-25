@@ -35,7 +35,7 @@ module.exports = function (fileName, converter) {
     } catch (err) {
       skipConversion = true;
       return this.emit('error',
-          new PluginError('gulp-jsoncombine', 'Error parsing JSON: ' + err));
+		  new PluginError('gulp-jsoncombine', 'Error parsing JSON: ' + err + ', file: ' + file.path.slice(file.base.length)));
     }
   }
 
