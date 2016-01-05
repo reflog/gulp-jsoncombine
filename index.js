@@ -10,7 +10,8 @@ module.exports = function (fileName, converter) {
   var config;
   var defaults = {
     dataConverter: dataConverter,
-    pathConverter: pathConverter
+    pathConverter: pathConverter,
+    fileConverter: fileConverter
   };
 
   function dataConverter(data) {
@@ -19,6 +20,10 @@ module.exports = function (fileName, converter) {
 
   function pathConverter(file) {
     return file.relative.substr(0,file.relative.length-5);
+  }
+
+  function fileConverter(file) {
+    return JSON.parse(file.contents.toString());
   }
 
   var data = {};
@@ -48,6 +53,10 @@ module.exports = function (fileName, converter) {
     throw new PluginError('gulp-jsoncombine', 'Missing path converter option for gulp-jsoncombine');
   }
 
+  if (!config.hasOwnProperty('fileConverter') && typeof config.fileConverter !== 'function') {
+    throw new PluginError('gulp-jsoncombine', 'Missing file converter option for gulp-jsoncombine');
+  }
+
   function bufferContents(file) {
     if (!firstFile) {
       firstFile = file;
@@ -63,7 +72,7 @@ module.exports = function (fileName, converter) {
     }
 
     try {
-      data[config.pathConverter(file)] = JSON.parse(file.contents.toString());
+      data[config.pathConverter(file)] = config.pathConverter(file);
     } catch (err) {
       skipConversion = true;
       return this.emit('error',
