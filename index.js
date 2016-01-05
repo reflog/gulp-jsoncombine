@@ -72,7 +72,7 @@ module.exports = function (fileName, converter) {
     }
 
     try {
-      data[config.pathConverter(file)] = config.pathConverter(file);
+      data[config.pathConverter(file)] = config.fileConverter(file);
     } catch (err) {
       skipConversion = true;
       return this.emit('error',
