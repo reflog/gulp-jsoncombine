@@ -27,15 +27,14 @@ module.exports = function (fileName, converter) {
       return; // ignore
     }
     if (file.isStream()) {
-	  skipConversion = true;
+      skipConversion = true;
       return this.emit('error', new PluginError('gulp-jsoncombine', 'Streaming not supported'));
     }
     try {
       data[file.relative.substr(0,file.relative.length-5)] = JSON.parse(file.contents.toString());
     } catch (err) {
       skipConversion = true;
-      return this.emit('error',
-		  new PluginError('gulp-jsoncombine', 'Error parsing JSON: ' + err + ', file: ' + file.path.slice(file.base.length)));
+      return this.emit('error', new PluginError('gulp-jsoncombine', 'Error parsing JSON: ' + err + ', file: ' + file.path.slice(file.base.length)));
     }
   }
 
@@ -43,17 +42,17 @@ module.exports = function (fileName, converter) {
     if (firstFile && !skipConversion) {
       var joinedPath = path.join(firstFile.base, fileName);
 
-	  try {
-	    var joinedFile = new File({
+      try {
+        var joinedFile = new File({
           cwd: firstFile.cwd,
           base: firstFile.base,
           path: joinedPath,
           contents: converter(data)
         });
-		this.emit('data', joinedFile);
-	  }	catch (e) {
-		return this.emit('error', new PluginError('gulp-jsoncombine', e, { showStack: true }));
-	  }
+        this.emit('data', joinedFile);
+      }	catch (e) {
+        return this.emit('error', new PluginError('gulp-jsoncombine', e, { showStack: true }));
+      }
     }
     this.emit('end');
   }
