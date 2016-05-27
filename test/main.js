@@ -31,8 +31,7 @@ describe("gulp-jsoncombine", function () {
     });
 
     var stream = jsoncombine("World", function (data) {
-      var helloFile = data.hell;
-      return new Buffer(helloFile.json + "\nWorld");
+      return new Buffer(data.hell + "\nWorld");
     });
 
     stream.on("data", function (newFile) {
@@ -41,6 +40,35 @@ describe("gulp-jsoncombine", function () {
       should.exist(newFile.contents);
 
       String(newFile.contents).should.equal(String(expectedFile.contents));
+      done();
+    });
+
+    stream.write(srcFile);
+    stream.end();
+  });
+
+  it('should expose meta data via the converter', function (done) {
+
+    var srcFile = new gutil.File({
+      path: "test/fixtures/hello.txt",
+      cwd: "test/",
+      base: "test/fixtures",
+      contents: fs.readFileSync("test/fixtures/hello.txt")
+    });
+
+    var stream = jsoncombine("World", function (data, meta) {
+      var hell = meta.hell;
+      var tokens = [hell.cwd, hell.base, hell.path];
+      return new Buffer(tokens.join('\n'));
+    });
+
+    stream.on("data", function (newFile) {
+      should.exist(newFile);
+      should.exist(newFile.contents);
+      var tokens = newFile.contents.toString().split('\n');
+      tokens[0].should.eql(srcFile.cwd);
+      tokens[1].should.eql(srcFile.base);
+      tokens[2].should.eql(srcFile.path);
       done();
     });
 

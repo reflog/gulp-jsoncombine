@@ -14,6 +14,7 @@ module.exports = function (fileName, converter) {
   }
 
   var data = {};
+  var meta = {};
   var firstFile = null;
 
   // We keep track of when we should skip the conversion for error cases
@@ -32,10 +33,9 @@ module.exports = function (fileName, converter) {
       return this.emit('error', new PluginError('gulp-jsoncombine', 'Streaming not supported'));
     }
     try {
-      data[file.relative.substr(0,file.relative.length-5)] = {
-        meta: file,
-        json: JSON.parse(file.contents.toString())
-      };
+      var name = file.relative.substr(0,file.relative.length-5);
+      data[name] = JSON.parse(file.contents.toString());
+      meta[name] = {cwd: file.cwd, base: file.base, path: file.path};
     } catch (err) {
       skipConversion = true;
       return this.emit('error', new PluginError('gulp-jsoncombine', 'Error parsing JSON: ' + err + ', file: ' + file.path.slice(file.base.length)));
@@ -51,7 +51,7 @@ module.exports = function (fileName, converter) {
           cwd: firstFile.cwd,
           base: firstFile.base,
           path: joinedPath,
-          contents: converter(data)
+          contents: converter(data, meta)
         });
         this.emit('data', joinedFile);
       }	catch (e) {
