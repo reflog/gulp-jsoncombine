@@ -31,8 +31,8 @@ describe("gulp-jsoncombine", function () {
     });
 
     var stream = jsoncombine("World", function (data) {
-      var helloTxt = data.hell;
-      return new Buffer(helloTxt + "\nWorld");
+      var helloFile = data.hell;
+      return new Buffer(helloFile.json + "\nWorld");
     });
 
     stream.on("data", function (newFile) {
