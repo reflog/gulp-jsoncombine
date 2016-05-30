@@ -5,7 +5,7 @@
 
 ## Usage
 
-First, install `gulp-jsoncombine` as a development dependency:
+First, install `gulp-jsoncombine` as a dependency:
 
 ```shell
 npm install --save-dev gulp-jsoncombine
@@ -13,13 +13,13 @@ npm install --save-dev gulp-jsoncombine
 
 Then, add it to your `gulpfile.js`:
 
-** This plugin will collect all the json files provided to it, parse them, put them in a dictionary where the keys of that dictionary are the filenames (sans the '.json' postfix) and pass that to a processor function. That function decides how that output should look in the resulting file. **
+** This plugin will collect all the json files provided to it, parse them, put them in a dictionary where the keys of that dictionary are the filenames (sans the '.json' suffix) and pass that to a processor function. That function decides how that output should look in the resulting file. **
 
 ```javascript
 var jsoncombine = require("gulp-jsoncombine");
 
 gulp.src("./src/*.json")
-	.pipe(jsoncombine("result.js",function(data){...}))
+	.pipe(jsoncombine("result.js",function(data, meta){...}))
 	.pipe(gulp.dest("./dist"));
 ```
 
@@ -35,10 +35,15 @@ The output filename
 #### processor
 Type: `Function`  
 
-The function that will be called with the dictionary containing all the data from the processes JSON files, where the keys of the dictionary, would be the names of the files (sans the '.json' postfix).
+The processor function will be called with two dictionaries holding the same set of keys. The keys are the filename sans the `.json` suffix of a file in the gulp stream.
 
-The function should return a new `Buffer` that would be writter to the output file.
+The first dictionary maps the filename to the string contents of the file. The second dictionary maps to a meta object containing the following keys:
 
+* `cwd` The working directory
+* `base` The base path
+* `path` The full path to the file
+
+The function should return a new `Buffer` that would be written to the output file.
 
 ## License
 
