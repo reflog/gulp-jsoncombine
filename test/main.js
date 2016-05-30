@@ -1,122 +1,151 @@
 /*global describe, it*/
 "use strict";
 
-var fs = require("fs"),
-	es = require("event-stream"),
-	should = require("should");
+var fs = require("fs");
+var es = require("event-stream");
+var should = require("should");
 
 require("mocha");
 
 delete require.cache[require.resolve("../")];
 
-var gutil = require("gulp-util"),
-	jsoncombine = require("../");
+var gutil = require("gulp-util");
+var jsoncombine = require("../");
 
 describe("gulp-jsoncombine", function () {
 
-	var expectedFile = new gutil.File({
-		path: "test/expected/hello.txt",
-		cwd: "test/",
-		base: "test/expected",
-		contents: fs.readFileSync("test/expected/hello.txt")
-	});
+  var expectedFile = new gutil.File({
+    path: "test/expected/hello.txt",
+    cwd: "test/",
+    base: "test/expected",
+    contents: fs.readFileSync("test/expected/hello.txt")
+  });
 
-	it("should produce expected file via buffer", function (done) {
+  it("should produce expected file via buffer", function (done) {
 
-		var srcFile = new gutil.File({
-			path: "test/fixtures/hello.txt",
-			cwd: "test/",
-			base: "test/fixtures",
-			contents: fs.readFileSync("test/fixtures/hello.txt")
-		});
+    var srcFile = new gutil.File({
+      path: "test/fixtures/hello.txt",
+      cwd: "test/",
+      base: "test/fixtures",
+      contents: fs.readFileSync("test/fixtures/hello.txt")
+    });
 
-		var stream = jsoncombine("World", function (data) {
-			var helloTxt = data.hell;
-			return new Buffer(helloTxt + "\nWorld");
-		});
+    var stream = jsoncombine("World", function (data) {
+      return new Buffer(data.hell + "\nWorld");
+    });
 
-		stream.on("data", function (newFile) {
+    stream.on("data", function (newFile) {
 
-			should.exist(newFile);
-			should.exist(newFile.contents);
+      should.exist(newFile);
+      should.exist(newFile.contents);
 
-			String(newFile.contents).should.equal(String(expectedFile.contents));
-			done();
-		});
+      String(newFile.contents).should.equal(String(expectedFile.contents));
+      done();
+    });
 
-		stream.write(srcFile);
-		stream.end();
-	});
+    stream.write(srcFile);
+    stream.end();
+  });
 
-	it("should error on stream", function (done) {
+  it('should expose meta data via the converter', function (done) {
 
-		var srcFile = new gutil.File({
-			path: "test/fixtures/hello.txt",
-			cwd: "test/",
-			base: "test/fixtures",
-			contents: fs.createReadStream("test/fixtures/hello.txt")
-		});
+    var srcFile = new gutil.File({
+      path: "test/fixtures/hello.txt",
+      cwd: "test/",
+      base: "test/fixtures",
+      contents: fs.readFileSync("test/fixtures/hello.txt")
+    });
 
-		var stream = jsoncombine("World", function () {});
+    var stream = jsoncombine("World", function (data, meta) {
+      var hell = meta.hell;
+      var tokens = [hell.cwd, hell.base, hell.path];
+      return new Buffer(tokens.join('\n'));
+    });
 
-		stream.on("error", function(err) {
-			err.message.should.equal("Streaming not supported");
-			done();
-		});
+    stream.on("data", function (newFile) {
+      should.exist(newFile);
+      should.exist(newFile.contents);
+      var tokens = newFile.contents.toString().split('\n');
+      tokens[0].should.eql(srcFile.cwd);
+      tokens[1].should.eql(srcFile.base);
+      tokens[2].should.eql(srcFile.path);
+      done();
+    });
 
-		stream.on("data", function (newFile) {
-			should.fail(null, null, "should never get here");
-		});
+    stream.write(srcFile);
+    stream.end();
+  });
 
-		stream.write(srcFile);
-		stream.end();
-	});
+  it("should error on stream", function (done) {
 
-	it("should error in converter", function (done) {
-		var srcFile = new gutil.File({
-			path: "test/fixtures/hello.txt",
-			cwd: "test/",
-			base: "test/fixtures",
-			contents: fs.readFileSync("test/fixtures/hello.txt")
-		});
+    var srcFile = new gutil.File({
+      path: "test/fixtures/hello.txt",
+      cwd: "test/",
+      base: "test/fixtures",
+      contents: fs.createReadStream("test/fixtures/hello.txt")
+    });
 
-		var stream = jsoncombine("World", function (data) {
-			throw new Error("oops");
-		});
+    var stream = jsoncombine("World", function () {});
 
-		stream.on("error", function(err) {
-			err.message.should.equal("oops");
-			done();
-		});
+    stream.on("error", function(err) {
+      err.message.should.equal("Streaming not supported");
+      done();
+    });
 
-		stream.on("data", function (newFile) {
-			should.fail(null, null, "should never get here");
-		});
+    stream.on("data", function (newFile) {
+      should.fail(null, null, "should never get here");
+    });
 
-		stream.write(srcFile);
-		stream.end();
-	});
+    stream.write(srcFile);
+    stream.end();
+  });
 
-	it("should error when parsing JSON in source file", function (done) {
-		var srcFile = new gutil.File({
-			path: "test/fixtures/badHello.txt",
-			cwd: "test/",
-			base: "test/fixtures",
-			contents: fs.readFileSync("test/fixtures/badHello.txt")
-		});
+  it("should error in converter", function (done) {
+    var srcFile = new gutil.File({
+      path: "test/fixtures/hello.txt",
+      cwd: "test/",
+      base: "test/fixtures",
+      contents: fs.readFileSync("test/fixtures/hello.txt")
+    });
 
-		var stream = jsoncombine("World", function (data) { });
+    var stream = jsoncombine("World", function (data) {
+      throw new Error("oops");
+    });
 
-		stream.on("error", function(err) {
-			err.message.should.equal("Error parsing JSON: SyntaxError: Unexpected token H, file: /badHello.txt");
-			done();
-		});
+    stream.on("error", function(err) {
+      err.message.should.equal("oops");
+      done();
+    });
 
-		stream.on("data", function (newFile) {
-			should.fail(null, null, "should never get here");
-		});
+    stream.on("data", function (newFile) {
+      should.fail(null, null, "should never get here");
+    });
 
-		stream.write(srcFile);
-		stream.end();
-	});
+    stream.write(srcFile);
+    stream.end();
+  });
+
+  it("should error when parsing JSON in source file", function (done) {
+    var srcFile = new gutil.File({
+      path: "test/fixtures/badHello.txt",
+      cwd: "test/",
+      base: "test/fixtures",
+      contents: fs.readFileSync("test/fixtures/badHello.txt")
+    });
+
+    var stream = jsoncombine("World", function (data) { });
+
+    stream.on("error", function(err) {
+      err.message.should.equal("Error parsing JSON: SyntaxError: Unexpected token H, file: /badHello.txt");
+      done();
+    });
+
+    stream.on("data", function (newFile) {
+      should.fail(null, null, "should never get here");
+    });
+
+    stream.write(srcFile);
+    stream.end();
+  });
+
 });
