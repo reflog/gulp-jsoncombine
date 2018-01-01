@@ -135,7 +135,7 @@ describe("gulp-jsoncombine", function() {
 
 		stream.on("error", function(err) {
 			err.message.should.equal(
-				"Error parsing JSON: SyntaxError: Unexpected token H, file: /badHello.txt"
+				"Error parsing JSON: SyntaxError: Unexpected token H in JSON at position 0, file: /badHello.txt"
 			);
 			done();
 		});
