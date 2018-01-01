@@ -2,6 +2,7 @@
 var through = require("through");
 var path = require("path");
 var PluginError = require("plugin-error");
+var Vinyl = require("vinyl");
 
 module.exports = function(fileName, converter) {
 	if (!fileName) {
@@ -63,7 +64,7 @@ module.exports = function(fileName, converter) {
 			var joinedPath = path.join(firstFile.base, fileName);
 
 			try {
-				var joinedFile = new File({
+				var joinedFile = new Vinyl({
 					cwd: firstFile.cwd,
 					base: firstFile.base,
 					path: joinedPath,
